@@ -1,6 +1,8 @@
 # Start DB
 Applications/XAMPP/manager-osx
+
 Start mysql
+
 Connect DBeaver
 
 # Start app
