@@ -1,19 +1,10 @@
 package com.ishan.statemachine.demo.order;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import javax.persistence.*;
 import java.time.Instant;
 
 @Entity
 @Table(name = "ORDER_DETAILS")
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
 public class Order {
 
     @Id
@@ -30,7 +21,7 @@ public class Order {
     private Instant orderDate;
 
     @Column(name = "STATUS")
-//    private String orderStatus;
+    // private String orderStatus;
     private String state;
 
     @Column(name = "TOTAL_AMOUNT")
@@ -42,5 +33,53 @@ public class Order {
 
     public void setOrderState(OrderStates s) {
         this.state = s.name();
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public long getProductId() {
+        return productId;
+    }
+
+    public void setProductId(long productId) {
+        this.productId = productId;
+    }
+
+    public long getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(long quantity) {
+        this.quantity = quantity;
+    }
+
+    public Instant getOrderDate() {
+        return orderDate;
+    }
+
+    public void setOrderDate(Instant orderDate) {
+        this.orderDate = orderDate;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public long getAmount() {
+        return amount;
+    }
+
+    public void setAmount(long amount) {
+        this.amount = amount;
     }
 }
