@@ -49,8 +49,19 @@ public class OrderController {
 	public Order fulfillOrder(@PathVariable("id") Long id) {
 		Order order = orderService.byId(id);
 
-		StateMachine<OrderStates, OrderEvents> fulfilledStateMachine = orderService.fulfill(order.getId());
+		StateMachine<OrderStates, OrderEvents> fulfilledStateMachine = orderService.fulfillOrder(order.getId());
 		logger.info("after calling fulfill(): " + fulfilledStateMachine.getState().getId().name());
+		logger.info("order: " + orderService.byId(order.getId()));
+		return order;
+	}
+	@PostMapping("/cancel/{id}")
+	public Order cancelOrder(@PathVariable("id") Long id) {
+		logger.info("cancelOrder id {} " , id);
+		Order order = orderService.byId(id);
+		logger.info("cancelOrder order {} " , order);
+
+		StateMachine<OrderStates, OrderEvents> canceledStateMachine = orderService.cancelOrder(order.getId());
+		logger.info("after calling cancelOrder(): " + canceledStateMachine.getState().getId().name());
 		logger.info("order: " + orderService.byId(order.getId()));
 		return order;
 	}

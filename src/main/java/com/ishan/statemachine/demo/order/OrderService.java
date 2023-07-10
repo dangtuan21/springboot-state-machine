@@ -56,8 +56,7 @@ public class OrderService {
 		return sm;
 	}
 
-	StateMachine<OrderStates, OrderEvents> fulfill(Long orderId) {
-		// StateMachine<OrderStates, OrderEvents> sm = this.build(orderId);
+	StateMachine<OrderStates, OrderEvents> fulfillOrder(Long orderId) {
 		StateMachine<OrderStates, OrderEvents> sm = this.createStateMachine(orderId);
 		Message<OrderEvents> fulfillmentMessage = MessageBuilder.withPayload(OrderEvents.FULFILL)
 				.setHeader(ORDER_ID_HEADER, orderId)
@@ -65,20 +64,29 @@ public class OrderService {
 		sm.sendEvent(fulfillmentMessage);
 		return sm;
 	}
+	StateMachine<OrderStates, OrderEvents> cancelOrder(Long orderId) {
+		logger.info("cancelOrder orderId {} ", orderId);
+		StateMachine<OrderStates, OrderEvents> sm = this.createStateMachine(orderId);
+		logger.info("sm {} ", sm);
+		Message<OrderEvents> cancelOrderMessage = MessageBuilder.withPayload(OrderEvents.CANCEL)
+				.setHeader(ORDER_ID_HEADER, orderId)
+				.build();
+		logger.info("cancelOrderMessage {} ", cancelOrderMessage);
+		sm.sendEvent(cancelOrderMessage);
+		return sm;
+	}
 
-	public StateMachine<OrderStates, OrderEvents> createStateMachine(Long orderId) {
-		Order order = this.orderRepository.findById(orderId).get();
-
+	private StateMachine<OrderStates, OrderEvents> configureStateMachine() {
 		try {
 			StateMachineBuilder.Builder<OrderStates, OrderEvents> builder = StateMachineBuilder.builder();
-
 			builder.configureStates().withStates()
 					.initial(OrderStates.SUBMITTED)
 					.state(OrderStates.PAID)
 					.end(OrderStates.FULFILLED)
 					.end(OrderStates.CANCELLED);
 
-			builder.configureTransitions().withExternal().source(OrderStates.SUBMITTED).target(OrderStates.PAID)
+			builder.configureTransitions()
+					.withExternal().source(OrderStates.SUBMITTED).target(OrderStates.PAID)
 					.event(OrderEvents.PAY)
 					.and()
 					.withExternal().source(OrderStates.PAID).target(OrderStates.FULFILLED).event(OrderEvents.FULFILL)
@@ -88,10 +96,20 @@ public class OrderService {
 					.and()
 					.withExternal().source(OrderStates.PAID).target(OrderStates.CANCELLED).event(OrderEvents.CANCEL);
 			StateMachine<OrderStates, OrderEvents> machine = builder.build();
+
+			return  machine;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	private StateMachine<OrderStates, OrderEvents> createStateMachine(Long orderId) {
+		Order order = this.orderRepository.findById(orderId).get();
+logger.info("order {} ", order);
+		try {
+			StateMachine<OrderStates, OrderEvents> machine = configureStateMachine();
 			machine.stop();
 			machine.getStateMachineAccessor()
 					.doWithAllRegions(sma -> {
-
 						sma.addStateMachineInterceptor(new StateMachineInterceptorAdapter<OrderStates, OrderEvents>() {
 
 							@Override
@@ -118,6 +136,7 @@ public class OrderService {
 								new DefaultStateMachineContext<>(order.getOrderState(), null, null, null));
 					});
 			machine.start();
+			logger.info("machine {} ", machine);
 
 			return machine;
 
